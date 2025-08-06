@@ -1,0 +1,35 @@
+# Build artifacts
+/dist/
+*.zip
+
+# Extension development
+extension/web-ext-artifacts/
+extension/*.xpi
+
+# Generated icons (users should generate these)
+extension/icons/*.png
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# API keys (should never be committed)
+*.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Temporary files
+*.tmp
+*.temp

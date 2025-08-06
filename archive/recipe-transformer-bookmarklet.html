@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Transformer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .setup-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        .bookmarklet-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #e74c3c;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px 0;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .bookmarklet-link {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+            padding: 15px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .bookmarklet-link:hover {
+            background: #c0392b;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .instructions {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍳 Recipe Transformer</h1>
+        <p style="text-align: center; color: #666;">Convert recipe websites to clean JSON-LD with metric units for Mealie</p>
+
+        <div class="setup-section">
+            <h3>🔧 Setup (One-time)</h3>
+            <label for="geminiKey">Google Gemini API Key:</label>
+            <input type="password" id="geminiKey" placeholder="Enter your Gemini API key">
+            <button onclick="saveApiKey()">Save API Key</button>
+            <div id="keyStatus" class="status" style="display: none;"></div>
+            
+            <div class="instructions">
+                <strong>Getting a Gemini API Key:</strong>
+                <ol>
+                    <li>Visit <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a></li>
+                    <li>Sign in with your Google account</li>
+                    <li>Click "Create API Key"</li>
+                    <li>Copy the key and paste it above</li>
+                </ol>
+                <p><strong>Privacy:</strong> Your API key is stored locally in your browser and never sent anywhere except to Google's Gemini API.</p>
+            </div>
+        </div>
+
+        <div class="bookmarklet-section">
+            <h3>📖 Bookmarklet</h3>
+            <p>Drag this button to your bookmarks bar:</p>
+            <a href="#" id="bookmarkletLink" class="bookmarklet-link">🍳 Transform Recipe</a>
+            
+            <div class="instructions">
+                <strong>How to use:</strong>
+                <ol>
+                    <li>Drag the button above to your bookmarks bar</li>
+                    <li>Navigate to any recipe website</li>
+                    <li>Click the bookmark</li>
+                    <li>Wait for processing (2-3 seconds)</li>
+                    <li>Copy the JSON or send to Mealie</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="setup-section">
+            <h3>🧪 Test</h3>
+            <button onclick="testConnection()">Test API Connection</button>
+            <div id="testStatus" class="status" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mozilla/readability@0.4.2/Readability.min.js"></script>
+    
+    <script>
+        function saveApiKey() {
+            const key = document.getElementById('geminiKey').value;
+            if (!key.trim()) {
+                showStatus('keyStatus', 'Please enter an API key', 'error');
+                return;
+            }
+            
+            localStorage.setItem('gemini-api-key', key);
+            showStatus('keyStatus', 'API key saved successfully!', 'success');
+            document.getElementById('geminiKey').value = '';
+        }
+
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+            element.style.display = 'block';
+        }
+
+        async function testConnection() {
+            const apiKey = localStorage.getItem('gemini-api-key');
+            if (!apiKey) {
+                showStatus('testStatus', 'Please save your API key first', 'error');
+                return;
+            }
+
+            showStatus('testStatus', 'Testing connection...', 'success');
+
+            try {
+                const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-goog-api-key': apiKey
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: 'Hello, respond with just the word "SUCCESS" if you receive this.'
+                            }]
+                        }]
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showStatus('testStatus', 'API connection successful! ✅', 'success');
+                } else {
+                    showStatus('testStatus', `API Error: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showStatus('testStatus', `Connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('gemini-api-key')) {
+                showStatus('keyStatus', 'API key already saved ✅', 'success');
+            }
+            
+            // Set bookmarklet href dynamically to avoid escaping issues
+            const bookmarkletCode = `
+(function(){
+    if(document.getElementById('recipe-transformer-modal')) return;
+    
+    // Load Readability.js
+    if (!window.Readability) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@mozilla/readability@0.4.2/Readability.min.js';
+        script.onload = function() { startTransform(); };
+        document.head.appendChild(script);
+    } else {
+        startTransform();
+    }
+    
+    function startTransform() {
+        const modal = document.createElement('div');
+        modal.id = 'recipe-transformer-modal';
+        modal.innerHTML = \`
+            <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:10000;display:flex;justify-content:center;align-items:center;font-family:'Segoe UI',sans-serif;">
+                <div style="background:white;padding:30px;border-radius:10px;max-width:90%;max-height:90%;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                        <h2 style="margin:0;color:#2c3e50;">🍳 Recipe Transformer</h2>
+                        <button onclick="document.getElementById('recipe-transformer-modal').remove()" style="background:#e74c3c;color:white;border:none;padding:5px 10px;border-radius:3px;cursor:pointer;">✕</button>
+                    </div>
+                    <div id="transformer-content">
+                        <div id="status" style="padding:15px;background:#3498db;color:white;border-radius:5px;margin-bottom:15px;">
+                            🔄 Extracting recipe content...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        \`;
+        document.body.appendChild(modal);
+        
+        setTimeout(processRecipe, 100);
+    }
+    
+    async function processRecipe() {
+        const statusEl = document.getElementById('status');
+        
+        try {
+            statusEl.innerHTML = '📖 Reading page content...';
+            
+            const documentClone = document.cloneNode(true);
+            const reader = new Readability(documentClone);
+            const article = reader.parse();
+            
+            if (!article) {
+                throw new Error('Could not extract readable content from this page');
+            }
+
+            statusEl.innerHTML = '🤖 Processing with AI...';
+            
+            let apiKey = localStorage.getItem('gemini-api-key');
+            if (!apiKey) {
+                // Try getting from the current domain's localStorage
+                apiKey = localStorage.getItem('recipe-transformer-gemini-key');
+                if (!apiKey) {
+                    // Prompt user for API key
+                    apiKey = prompt('Please enter your Gemini API key:');
+                    if (!apiKey) {
+                        throw new Error('API key is required to transform recipes');
+                    }
+                    // Save to current domain's localStorage
+                    localStorage.setItem('recipe-transformer-gemini-key', apiKey);
+                }
+            }
+
+            const prompt = \`Extract recipe information from the following content and convert it to JSON-LD format following schema.org/Recipe specification. 
+
+CRITICAL REQUIREMENTS:
+1. Convert ALL measurements to metric units:
+   - Cups flour → 120g per cup
+   - Cups sugar → 200g per cup  
+   - Cups liquid → 240ml per cup
+   - Tablespoons → 15ml each
+   - Teaspoons → 5ml each
+   - Ounces → multiply by 28.35 for grams
+   - Pounds → multiply by 453.6 for grams
+   - Fahrenheit → Celsius using (F-32)×5/9
+   - Fluid ounces → 30ml each
+   - Stick of butter → 113g
+   - Large egg → 50g
+
+2. Preserve cooking context like "room temperature", "divided", "chopped", etc.
+
+3. Return ONLY valid JSON-LD, no explanatory text.
+
+Content:
+\${article.title}
+
+\${article.content}
+
+Return the recipe as JSON-LD following this exact structure:
+{
+  "@context": "https://schema.org/",
+  "@type": "Recipe",
+  "name": "",
+  "description": "",
+  "recipeIngredient": [],
+  "recipeInstructions": [
+    {
+      "@type": "HowToStep",
+      "text": ""
+    }
+  ],
+  "cookTime": "",
+  "prepTime": "",
+  "totalTime": "",
+  "recipeYield": "",
+  "recipeCategory": "",
+  "recipeCuisine": "",
+  "keywords": "",
+  "nutrition": {
+    "@type": "NutritionInformation"
+  }
+}\`;
+
+            const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': apiKey
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.1,
+                        maxOutputTokens: 2048,
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(\`API Error: \${response.status} \${response.statusText}\`);
+            }
+
+            const data = await response.json();
+            const recipeText = data.candidates[0].content.parts[0].text;
+            
+            let recipeJson;
+            try {
+                const jsonMatch = recipeText.match(/\\{[\\s\\S]*\\}/);
+                if (jsonMatch) {
+                    recipeJson = JSON.parse(jsonMatch[0]);
+                } else {
+                    recipeJson = JSON.parse(recipeText);
+                }
+            } catch (e) {
+                throw new Error('Invalid JSON response from AI');
+            }
+
+            displayResult(recipeJson);
+
+        } catch (error) {
+            statusEl.innerHTML = \`❌ Error: \${error.message}\`;
+            statusEl.style.background = '#e74c3c';
+        }
+    }
+
+    function displayResult(recipeJson) {
+        const content = document.getElementById('transformer-content');
+        const jsonString = JSON.stringify(recipeJson, null, 2);
+        
+        content.innerHTML = \`
+            <div style="margin-bottom:15px;padding:15px;background:#d4edda;border-radius:5px;color:#155724;">
+                ✅ Recipe extracted successfully!
+            </div>
+            
+            <div style="margin-bottom:15px;">
+                <h3 style="margin:0 0 10px 0;">\${recipeJson.name || 'Untitled Recipe'}</h3>
+                <p style="color:#666;margin:0;">\${recipeJson.recipeIngredient?.length || 0} ingredients • \${recipeJson.recipeInstructions?.length || 0} steps</p>
+            </div>
+
+            <div style="margin-bottom:15px;">                    
+                <button onclick="downloadRecipeJson()" style="background:#3498db;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;">💾 Download JSON</button>
+            </div>
+
+            <textarea id="recipe-json" style="width:100%;height:300px;font-family:'Courier New',monospace;font-size:12px;border:1px solid #ddd;border-radius:4px;padding:10px;box-sizing:border-box;" readonly>\${jsonString}</textarea>
+        \`;
+        
+        window.downloadRecipeJson = function() {
+            const jsonData = document.getElementById('recipe-json').value;
+            const recipe = JSON.parse(jsonData);
+            const recipeName = recipe.name ? recipe.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'recipe';
+            
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = recipeName + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+    }
+})();`;
+            
+            document.getElementById('bookmarkletLink').href = 'javascript:' + encodeURIComponent(bookmarkletCode);
+        });
+
+        function transformRecipe() {
+            if (document.getElementById('recipe-transformer-modal')) {
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.id = 'recipe-transformer-modal';
+            modal.innerHTML = `
+                <div style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.8);
+                    z-index: 10000;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    font-family: 'Segoe UI', sans-serif;
+                ">
+                    <div style="
+                        background: white;
+                        padding: 30px;
+                        border-radius: 10px;
+                        max-width: 90%;
+                        max-height: 90%;
+                        overflow-y: auto;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                    ">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="margin: 0; color: #2c3e50;">🍳 Recipe Transformer</h2>
+                            <button onclick="document.getElementById('recipe-transformer-modal').remove()" style="
+                                background: #e74c3c;
+                                color: white;
+                                border: none;
+                                padding: 5px 10px;
+                                border-radius: 3px;
+                                cursor: pointer;
+                            ">✕</button>
+                        </div>
+                        <div id="transformer-content">
+                            <div id="status" style="padding: 15px; background: #3498db; color: white; border-radius: 5px; margin-bottom: 15px;">
+                                🔄 Extracting recipe content...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            setTimeout(processRecipe, 100);
+        }
+
+        async function processRecipe() {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                statusEl.innerHTML = '📖 Reading page content...';
+                
+                const documentClone = document.cloneNode(true);
+                const reader = new Readability(documentClone);
+                const article = reader.parse();
+                
+                if (!article) {
+                    throw new Error('Could not extract readable content from this page');
+                }
+
+                statusEl.innerHTML = '🤖 Processing with AI...';
+                
+                const apiKey = localStorage.getItem('gemini-api-key');
+                if (!apiKey) {
+                    throw new Error('No API key found. Please setup your Gemini API key first.');
+                }
+
+                const prompt = `Extract recipe information from the following content and convert it to JSON-LD format following schema.org/Recipe specification. 
+
+CRITICAL REQUIREMENTS:
+1. Convert ALL measurements to metric units:
+   - Cups flour → 120g per cup
+   - Cups sugar → 200g per cup  
+   - Cups liquid → 240ml per cup
+   - Tablespoons → 15ml each
+   - Teaspoons → 5ml each
+   - Ounces → multiply by 28.35 for grams
+   - Pounds → multiply by 453.6 for grams
+   - Fahrenheit → Celsius using (F-32)×5/9
+   - Fluid ounces → 30ml each
+   - Stick of butter → 113g
+   - Large egg → 50g
+
+2. Preserve cooking context like "room temperature", "divided", "chopped", etc.
+
+3. Return ONLY valid JSON-LD, no explanatory text.
+
+Content:
+${article.title}
+
+${article.content}
+
+Return the recipe as JSON-LD following this exact structure:
+{
+  "@context": "https://schema.org/",
+  "@type": "Recipe",
+  "name": "",
+  "description": "",
+  "recipeIngredient": [],
+  "recipeInstructions": [
+    {
+      "@type": "HowToStep",
+      "text": ""
+    }
+  ],
+  "cookTime": "",
+  "prepTime": "",
+  "totalTime": "",
+  "recipeYield": "",
+  "recipeCategory": "",
+  "recipeCuisine": "",
+  "keywords": "",
+  "nutrition": {
+    "@type": "NutritionInformation"
+  }
+}`;
+
+                const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-goog-api-key': apiKey
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.1,
+                            maxOutputTokens: 2048,
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const recipeText = data.candidates[0].content.parts[0].text;
+                
+                let recipeJson;
+                try {
+                    const jsonMatch = recipeText.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        recipeJson = JSON.parse(jsonMatch[0]);
+                    } else {
+                        recipeJson = JSON.parse(recipeText);
+                    }
+                } catch (e) {
+                    throw new Error('Invalid JSON response from AI');
+                }
+
+                displayResult(recipeJson);
+
+            } catch (error) {
+                statusEl.innerHTML = `❌ Error: ${error.message}`;
+                statusEl.style.background = '#e74c3c';
+            }
+        }
+
+        function displayResult(recipeJson) {
+            const content = document.getElementById('transformer-content');
+            const jsonString = JSON.stringify(recipeJson, null, 2);
+            
+            content.innerHTML = `
+                <div style="margin-bottom: 15px; padding: 15px; background: #d4edda; border-radius: 5px; color: #155724;">
+                    ✅ Recipe extracted successfully!
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <h3 style="margin: 0 0 10px 0;">${recipeJson.name || 'Untitled Recipe'}</h3>
+                    <p style="color: #666; margin: 0;">${recipeJson.recipeIngredient?.length || 0} ingredients • ${recipeJson.recipeInstructions?.length || 0} steps</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">                    
+                    <button onclick="downloadJson()" style="
+                        background: #3498db;
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 5px;
+                        cursor: pointer;
+                    ">💾 Download JSON</button>
+                </div>
+
+                <textarea id="recipe-json" style="
+                    width: 100%;
+                    height: 300px;
+                    font-family: 'Courier New', monospace;
+                    font-size: 12px;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    padding: 10px;
+                    box-sizing: border-box;
+                " readonly>${jsonString}</textarea>
+            `;
+        }
+
+        function downloadJson() {
+            const jsonData = document.getElementById('recipe-json').value;
+            const recipe = JSON.parse(jsonData);
+            const recipeName = recipe.name ? recipe.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'recipe';
+            
+            const blob = new Blob([jsonData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${recipeName}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

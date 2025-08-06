@@ -1,0 +1,68 @@
+{
+  "manifest_version": 3,
+  "name": "Recipe Transformer",
+  "version": "1.0.0",
+  "description": "Convert recipe websites to clean JSON-LD with metric units for Mealie",
+  
+  "permissions": [
+    "activeTab",
+    "storage",
+    "notifications"
+  ],
+  
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  
+  "background": {
+    "service_worker": "background.js"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Transform Recipe",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+  
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  
+  "commands": {
+    "transform-recipe": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+R"
+      },
+      "description": "Transform recipe on current page"
+    }
+  },
+  
+  "web_accessible_resources": [
+    {
+      "resources": ["readability.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

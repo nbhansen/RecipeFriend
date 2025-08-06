@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            width: 320px;
+            min-height: 200px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            margin: 0;
+            color: #2c3e50;
+        }
+        
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .status.loading {
+            background: #3498db;
+            color: white;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.inactive {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+        }
+        
+        .recipe-info {
+            margin-bottom: 15px;
+        }
+        
+        .recipe-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+        
+        .recipe-info p {
+            margin: 0;
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-primary:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #219a52;
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .result-preview {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-height: 150px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .footer {
+            text-align: center;
+            padding-top: 10px;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .footer a {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #ffffff3d;
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🍳 Recipe Transformer</h1>
+    </div>
+    
+    <div id="status" class="status inactive">
+        Ready to transform recipe
+    </div>
+    
+    <div id="recipeInfo" class="recipe-info hidden">
+        <h3 id="recipeName">Recipe Name</h3>
+        <p id="recipeStats">0 ingredients • 0 steps</p>
+    </div>
+    
+    <div class="actions">
+        <button id="transformBtn" class="btn-primary">Transform Recipe</button>
+    </div>
+    
+    <div id="resultActions" class="actions hidden">
+        <button id="downloadBtn" class="btn-success">Download JSON</button>
+        <button id="retryBtn" class="btn-secondary">Try Again</button>
+    </div>
+    
+    <div id="resultPreview" class="result-preview hidden"></div>
+    
+    <div class="footer">
+        <a href="#" id="optionsLink">Settings</a> • 
+        <a href="https://github.com/your-username/recipe-transformer" target="_blank">Help</a>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>
