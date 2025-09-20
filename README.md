@@ -95,5 +95,3 @@ Creates `dist/recipe-transformer-extension.zip` excluding dev files.
 
 - Main logic lives in `extension/`: start with `content.js`, `background.js`, `popup.js`, `options.js`.
 - Readability is vendored (`readability.js`); update carefully and pin the source/version in commit messages when bumping.
-- `test-extension.sh` performs basic structure and manifest checks; `test.sh` is a placeholder.
-
