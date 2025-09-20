@@ -1,185 +1,99 @@
-# Recipe Transformer
+# Recipe Transformer (Firefox Extension)
 
-A Firefox browser extension that converts recipe websites into clean JSON-LD format with automatic metric unit conversion. Designed for importing recipes into Mealie or other recipe management systems.
+Convert recipe web pages into clean schema.org/Recipe JSON‑LD with metric units (grams/ml/°C). This repo contains a working Firefox extension; Chrome (Manifest V3) is partially prepared.
 
-## Features
+## What it does
 
-- **Automatic Unit Conversion**: Converts imperial measurements (cups, fahrenheit, ounces) to metric (grams, ml, celsius)
-- **AI-Powered Extraction**: Uses Google Gemini API to parse recipe content intelligently
-- **Cross-Domain Storage**: API key configuration persists across all websites
-- **Smart Detection**: Extension icon highlights on recipe pages
-- **Keyboard Shortcuts**: Quick transformation with Ctrl+Shift+R
-- **Clean Downloads**: JSON files automatically named after the recipe
-- **Privacy-Focused**: Processing happens locally, recipes never stored on servers
+- Extracts main content from a recipe page using Mozilla Readability
+- Sends the title and text to Google Gemini to produce JSON‑LD
+- Applies simple, explicit metric conversion rules (cups → g/ml, °F → °C, etc.)
+- Lets you download the result as a JSON file named after the recipe
+- Stores your API key locally in browser sync storage
 
-## Installation
+## Repository layout
 
-### Method A: Development Installation
-1. Open Firefox and navigate to `about:debugging`
-2. Click "This Firefox" → "Load Temporary Add-on"
-3. Select `extension/manifest.json` from this repository
-4. Extension appears in your toolbar
+- `extension/`
+  - `manifest.json` (Firefox MV2), `manifest-v3.json` (Chrome MV3)
+  - `background.js`, `background-v3.js` (AI call, icon state, commands)
+  - `content.js` (page extraction, recipe detection)
+  - `popup.html`/`popup.js` (manual transform, preview, download)
+  - `options.html`/`options.js` (Gemini API key, prefs)
+  - `readability.js` (vendored Mozilla Readability)
+  - `icons/` (PNG icons; generator `create-icons.html`)
+  - `setup.sh`, `package.sh`, `test-extension.sh`
+- `archive/` (old bookmarklet prototype)
+- Project docs: `README.md`, `SPEC.md`, `PROJECT_STATUS.md`
 
-### Method B: Package for Distribution
-```bash
-cd extension/
+## How it works (data flow)
+
+1. `content.js` runs on all pages. It injects `readability.js`, detects if the page looks like a recipe, and notifies background to set the icon title.
+2. When you click the popup or press Ctrl+Shift+R:
+	- `content.js` extracts `{ title, textContent, url }` via Readability.
+	- `background.js` fetches `geminiApiKey` from `browser.storage.sync` and calls the Gemini API with a prompt that requests JSON‑LD and metric conversions.
+	- The popup shows a short preview and a Download button.
+
+Storage keys (sync storage): `geminiApiKey`, `autoDetect`, `showNotifications`, `defaultFormat`, `installDate`, `recipeCount`.
+
+## Install (development, Firefox)
+
+1. Generate icons (one-time): open `extension/icons/create-icons.html` and save the four canvases as `icon-16.png`, `icon-32.png`, `icon-48.png`, `icon-128.png` into `extension/icons/`.
+	- Optional helper: from `extension/`, run `./setup.sh` to check/generate icons and validate `manifest.json`.
+2. Load the extension temporarily in Firefox:
+	- Go to `about:debugging` → This Firefox → Load Temporary Add‑on → select `extension/manifest.json`.
+
+## Configure API key
+
+1. Click the extension icon → Settings.
+2. Paste your Google Gemini API key and Save.
+3. Use “Test Connection” to quickly verify the key.
+
+## Use
+
+1. Navigate to a recipe page.
+2. Click the extension icon → “Transform Recipe”.
+3. Download the JSON file, then import into your recipe manager (e.g., Mealie).
+4. Keyboard shortcut: Ctrl+Shift+R on a recipe page.
+
+## Package for distribution (ZIP)
+
+From `extension/`:
+
+```sh
 ./package.sh
-# Install the generated ZIP file in Firefox
 ```
 
-## Setup
+Creates `dist/recipe-transformer-extension.zip` excluding dev files.
 
-### 1. Generate API Key
-1. Get a free Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Click the Recipe Transformer extension icon
-3. Click "Settings" → Enter your API key → "Save API Key"
-4. Click "Test Connection" to verify
+## Permissions and privacy
 
-### 2. Icon Generation
-Icons are required for the extension to function properly:
-1. Open `extension/icons/create-icons.html` in your browser
-2. Right-click each canvas and "Save image as":
-   - 16x16 canvas → `icon-16.png`
-   - 32x32 canvas → `icon-32.png`
-   - 48x48 canvas → `icon-48.png`
-   - 128x128 canvas → `icon-128.png`
-3. Save all PNG files in the `extension/icons/` directory
-
-## Usage
-
-### Transform Any Recipe
-1. **Navigate** to any recipe website (BBC Food, AllRecipes, Food Network, etc.)
-2. **Click** the highlighted Recipe Transformer extension icon
-3. **Transform** by clicking "Transform Recipe" button
-4. **Download** the JSON file (automatically named after the recipe)
-
-### Keyboard Shortcut
-- Press `Ctrl+Shift+R` on any recipe page for instant transformation
-- Notification appears when recipe is ready
-
-### Import to Mealie
-1. Copy the downloaded JSON content
-2. In Mealie: Recipes → Create → Paste JSON
-3. All measurements are now in metric with proper formatting
-
-## Unit Conversion Rules
-
-The extension converts imperial measurements to metric:
-
-| Imperial | Metric Conversion |
-|----------|------------------|
-| Cups (flour) | 120g per cup |
-| Cups (sugar) | 200g per cup |
-| Cups (liquid) | 240ml per cup |
-| Tablespoons | 15ml each |
-| Teaspoons | 5ml each |
-| Ounces (weight) | × 28.35 for grams |
-| Pounds | × 453.6 for grams |
-| Fahrenheit | (F-32)×5/9 for Celsius |
-| Fluid ounces | 30ml each |
-| Stick of butter | 113g |
-| Large egg | 50g |
-
-Cooking terms like "room temperature", "divided", "chopped" are preserved.
-
-## Repository Structure
-
-```
-RecipeFriend/
-├── README.md                    # This file
-├── LICENSE                      # MIT license
-├── SPEC.md                     # Original project specification
-├── recipe-transformer.html     # Legacy bookmarklet version (deprecated)
-└── extension/                  # Firefox Extension
-    ├── manifest.json           # Extension configuration
-    ├── background.js           # API calls and background logic
-    ├── content.js             # Recipe extraction from web pages
-    ├── popup.html/.js         # Extension popup interface
-    ├── options.html/.js       # Settings and configuration
-    ├── readability.js         # Mozilla's content extraction library
-    ├── icons/                 # Extension icons and generator
-    ├── README.md              # Extension-specific documentation
-    └── package.sh             # Build script
-```
+- Permissions: `activeTab`, `storage` (plus host permissions for http/https; MV3 also lists `notifications`).
+- API key is stored in `browser.storage.sync` (local to your browser profile; can sync if browser sync is enabled).
+- The page text is sent directly from your browser to Google’s Gemini API. No server in this project receives it.
 
 ## Troubleshooting
 
-### Extension Won't Load
-- Check all required files are present
-- Verify `manifest.json` syntax is valid
-- Generate PNG icons using `icons/create-icons.html`
+- Extension won’t load: verify icons exist and `manifest.json` is valid JSON. `extension/setup.sh` can help.
+- “API key not configured”: add the key in Settings.
+- “Invalid API key” / 401–403: re-check the key; try the “Test Connection” button.
+- “No recipe detected”: some pages don’t match heuristics; you can still try Transform.
+- “Content extraction failed”: some sites block or heavily obfuscate content.
+- Output isn’t valid JSON: try again; the background attempts to extract JSON from the model response.
 
-### API Connection Fails
-- Verify Gemini API key is correct
-- Test connection in extension settings
-- Check your internet connection
+## Chrome / Manifest V3 notes
 
-### Recipe Not Detected
-- Try refreshing the page
-- Check if page actually contains structured recipe content
-- Some sites may block content extraction
+- `extension/manifest-v3.json` and `background-v3.js` are included. MV3 service worker currently points to `background.js`; you can point it to `background-v3.js` or consolidate both into a single file that uses a small `browser`/`chrome` compatibility shim (already present in `background-v3.js`).
+- MV3 has slightly different `web_accessible_resources` and notification permission handling. Chrome support hasn’t been fully exercised here.
 
-### Transform Fails
-- Verify API key is configured in settings
-- Check Firefox Developer Console for errors
-- Some recipe formats may not be compatible
+## Known limitations
 
-## Privacy & Security
+- Recipe detection is heuristic; false positives/negatives can occur.
+- The model may return extra text; JSON parsing uses a simple extraction fallback.
+- Some sites (paywalls/anti-scraping) may prevent reliable extraction.
+- Disabled-state icons are implemented for MV2; MV3 currently uses the same icons for both states.
 
-- **Local Storage**: API keys stored securely in Firefox extension storage
-- **No Data Collection**: We don't collect, store, or transmit your recipes
-- **Direct API Calls**: Recipe content only sent directly to Google's Gemini API
-- **Open Source**: Full source code available for audit
-- **Sync Support**: API keys sync across your Firefox account (if enabled)
+## Maintenance notes
 
-## Development
+- Main logic lives in `extension/`: start with `content.js`, `background.js`, `popup.js`, `options.js`.
+- Readability is vendored (`readability.js`); update carefully and pin the source/version in commit messages when bumping.
+- `test-extension.sh` performs basic structure and manifest checks; `test.sh` is a placeholder.
 
-### Prerequisites
-- Firefox Developer Edition (recommended)
-- Google Gemini API key
-- Basic knowledge of browser extensions
-
-### Setup Development Environment
-```bash
-git clone <repository-url>
-cd RecipeFriend/extension/
-# Follow installation steps above
-```
-
-### Making Changes
-1. Edit extension files
-2. Go to `about:debugging` in Firefox
-3. Click "Reload" next to the extension
-4. Test changes
-
-### Debug Console
-- **Extension Console**: `about:debugging` → Extension → "Inspect"
-- **Content Script**: Browser Developer Tools → Console
-- **Background Script**: Extension Console
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/new-feature`)
-3. Commit your changes (`git commit -m 'Add new feature'`)
-4. Push to the branch (`git push origin feature/new-feature`)
-5. Open a Pull Request
-
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/your-username/RecipeFriend/issues)
-- **Feature Requests**: Open an issue with the "enhancement" label
-- **Documentation**: Check the `extension/README.md` for technical details
-
-## Roadmap
-
-- [ ] Chrome extension support
-- [ ] Direct Mealie API integration
-- [ ] Batch recipe processing
-- [ ] Custom unit conversion rules
-- [ ] Recipe preview editing
-- [ ] Multiple AI provider support
