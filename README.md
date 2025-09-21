@@ -2,6 +2,21 @@
 
 Convert recipe web pages into clean schema.org/Recipe JSON‑LD with metric units (grams/ml/°C). This repo includes a working Chrome Manifest V3 extension in `extension-chrome/` and a legacy Firefox MV2 build in `extension/` (kept for reference).
 
+## Use cases
+- Importing into Mealie (my personal use case):
+  - Mealie: https://github.com/mealie-recipes/mealie
+  - Screenshot shows the transformed recipe (Spicy Vodka Pasta) imported into Mealie.
+
+  <img alt="Mealie import – Spicy Vodka Pasta" src="pics/mealie-import-spicy-vodka-pasta.png" width="800" />
+
+- Extension popup (MV3):
+
+  <img alt="Extension popup" src="pics/extension-popup.png" width="380" />
+
+- JSON preview in the popup:
+
+  <img alt="JSON preview" src="pics/json-preview.png" width="600" />
+
 ## Highlights
 
 - Mozilla Readability extraction on-page
@@ -62,21 +77,7 @@ MIT – see `LICENSE`.
 
 The `extension/` folder contains the earlier Firefox MV2 build. It’s no longer the primary target. Keep it around only if you need to reference prior code or port to Firefox MV3 later.
 
-## Screenshots
 
-- Importing into Mealie (my personal use case):
-  - Mealie: https://github.com/mealie-recipes/mealie
-  - Screenshot shows the transformed recipe (Spicy Vodka Pasta) imported into Mealie.
-
-  <img alt="Mealie import – Spicy Vodka Pasta" src="pics/mealie-import-spicy-vodka-pasta.png" width="800" />
-
-- Extension popup (MV3):
-
-  <img alt="Extension popup" src="pics/extension-popup.png" width="380" />
-
-- JSON preview in the popup:
-
-  <img alt="JSON preview" src="pics/json-preview.png" width="600" />
 
 ## Releases and changelog
 
