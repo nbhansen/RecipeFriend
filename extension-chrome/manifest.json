@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Recipe Transformer",
-  "version": "1.0.0",
+  "name": "Recipe Transformer (Chrome MV3)",
+  "version": "1.0.2",
   "description": "Convert recipe websites to clean JSON-LD with metric units for Mealie",
   "permissions": [
     "activeTab",
@@ -20,7 +20,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["browser-shim.js", "content.js"],
+  "js": ["lib/browser-polyfill.min.js", "readability.js", "content.js"],
       "run_at": "document_idle"
     }
   ],

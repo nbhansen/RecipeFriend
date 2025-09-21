@@ -8,6 +8,7 @@ extension/*.xpi
 
 # Generated icons (users should generate these)
 extension/icons/*.png
+extension-chrome/icons/*.png
 
 # OS files
 .DS_Store
@@ -33,3 +34,5 @@ npm-debug.log*
 # Temporary files
 *.tmp
 *.temp
+dist/
+*.zip

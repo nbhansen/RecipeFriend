@@ -1,4 +1,6 @@
-# Recipe Transformer Firefox Extension
+# Legacy: Recipe Transformer (Firefox MV2)
+
+This folder contains the legacy Firefox MV2 implementation and is retained for reference only. The actively maintained Chrome Manifest V3 extension lives in `../extension-chrome/`.
 
 Convert recipe websites to clean JSON-LD with metric units for Mealie and other recipe management systems.
 
@@ -12,7 +14,7 @@ Convert recipe websites to clean JSON-LD with metric units for Mealie and other 
 4. Navigate to this extension folder and select `manifest.json`
 5. The extension will be loaded and appear in your extensions list
 
-### Method 2: Install as Permanent Extension
+### Method 2: Install as Permanent Extension (not maintained)
 
 1. Create a ZIP file containing all extension files:
    ```bash
@@ -107,7 +109,7 @@ The extension needs icon files in PNG format. To generate them:
 - No data is collected or stored by this extension
 - Source code is fully transparent and auditable
 
-## Development
+## Development (legacy)
 
 To modify or debug the extension:
 

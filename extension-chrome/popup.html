@@ -184,6 +184,7 @@
     
     <div class="actions">
         <button id="transformBtn" class="btn-primary">Transform Recipe</button>
+        <button id="diagBtn" class="btn-secondary">Diagnostics</button>
     </div>
     
     <div id="resultActions" class="actions hidden">
@@ -193,12 +194,19 @@
     
     <div id="resultPreview" class="result-preview hidden"></div>
     
-    <div class="footer">
-        <a href="#" id="optionsLink">Settings</a> • 
-        <a href="https://github.com/your-username/recipe-transformer" target="_blank">Help</a>
+    <div id="diagLog" class="result-preview hidden" style="max-height: 100px;"></div>
+    
+    <div id="recentSection" class="section hidden" style="margin-top:10px;">
+        <div style="font-weight:600; margin-bottom:6px; color:#2c3e50;">Recent</div>
+        <ul id="recentList" style="padding-left:16px; margin:0; font-size:12px; color:#444;"></ul>
     </div>
     
-    <script src="browser-shim.js"></script>
+    <div class="footer">
+        <a href="#" id="optionsLink">Settings</a> • 
+        <a href="https://github.com/nbhansen/RecipeFriend" target="_blank">Help</a>
+    </div>
+    
+    <script src="lib/browser-polyfill.min.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>
