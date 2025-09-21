@@ -61,3 +61,26 @@ MIT – see `LICENSE`.
 ## Notes on the legacy folder
 
 The `extension/` folder contains the earlier Firefox MV2 build. It’s no longer the primary target. Keep it around only if you need to reference prior code or port to Firefox MV3 later.
+
+## Screenshots
+
+- Importing into Mealie (my personal use case):
+  - Mealie: https://github.com/mealie-recipes/mealie
+  - Screenshot shows the transformed recipe (Spicy Vodka Pasta) imported into Mealie.
+
+  <img alt="Mealie import – Spicy Vodka Pasta" src="pics/mealie-import-spicy-vodka-pasta.png" width="800" />
+
+- Extension popup (MV3):
+
+  <img alt="Extension popup" src="pics/extension-popup.png" width="380" />
+
+- JSON preview in the popup:
+
+  <img alt="JSON preview" src="pics/json-preview.png" width="600" />
+
+## Releases and changelog
+
+[![Release](https://img.shields.io/github/v/release/nbhansen/RecipeFriend?include_prereleases&sort=semver)](https://github.com/nbhansen/RecipeFriend/releases)
+
+- Latest release notes: see `RELEASE_SUMMARY.md`.
+- Full changelog: see `CHANGELOG.md`.
